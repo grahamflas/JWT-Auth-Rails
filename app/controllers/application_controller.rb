@@ -6,10 +6,20 @@ class ApplicationController < ActionController::API
     JWT.encode(payload, 'my_secret')
   end
 
-  def decode_token(token)
+  def auth_header
+    request.headers['Authorization']
+  end
+
+  def decode_token
     # token = "eyJhbGciOiJIUzI1NiJ9.eyJiZWVmIjoic3RlYWsifQ.OIsGX8Y2XTQk6gF_4LuMRrHrkNqiVAe9Un4A5KlqX8E"
     # JWT.decode(token, 'my_secret') => [{"beef"=>"steak"}, {"alg"=>"HS256"}]
-
-    JWT.decode(token, 'my_secret').first
+    if auth_header
+      token = auth_header.split(' ')[1]
+      begin
+        JWT.decode(token, 'my_secret', true, algorithm: 'HS256')
+      rescue JWT::DecodeError
+        nil
+      end
+    end
   end
 end
